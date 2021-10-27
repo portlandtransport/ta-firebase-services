@@ -41,4 +41,32 @@ app.get('/stop/:item_id', (req, res) => {
         })();
     });
 
+    // read all
+app.get('/stops', (req, res) => {
+  (async () => {
+      try {
+        const querySnapshot = await db.collection('stops').get()
+        const selectedStops = querySnapshot.docs.map(doc => doc.data());
+        return res.status(200).send(selectedStops);
+      } catch (error) {
+          console.log(error);
+          return res.status(500).send(error);
+      }
+      })();
+  });
+    
+app.get('/stops/agency/:agency_id', (req, res) => {
+  (async () => {
+      try {
+          const querySnapshot = await db.collection('stops').where('agency', '==', req.params.agency_id).get()
+          const selectedStops = querySnapshot.docs.map(doc => doc.data());
+          return res.status(200).send(selectedStops);
+      } catch (error) {
+          console.log(error);
+          return res.status(500).send(error);
+      }
+      })();
+  });
+  
+
 exports.app = functions.https.onRequest(app);
