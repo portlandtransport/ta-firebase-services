@@ -106,3 +106,5 @@ dist
 # DB Credentials
 credentials.js
 serviceAccount.json
+functions/serviceAccount.json
+functions/config.json
