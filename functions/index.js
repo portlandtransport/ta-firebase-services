@@ -117,3 +117,38 @@ app.get("/stops/updates", (req, res) => {
 });
 
 exports.stops = functions.https.onRequest(app);
+
+exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
+    .timeZone("America/Los_Angeles")
+    .onRun((context) => {
+      console.log("scheduled job to update TriMet entries");
+      let data = "";
+      const options = {
+        hostname: "transitboard.com",
+        port: 443,
+        path: "/firebase_stop_updates.json",
+        method: "GET",
+      };
+      const request = https.request(options, (response) => {
+        response.on("data", (d) => {
+          data += d;
+        });
+        response.on("close", () => {
+          console.log("Response closed");
+          const stops = JSON.parse(data);
+          Object.keys(stops.stops).forEach(function(key) {
+            const val = stops.stops[key];
+            (async () => {
+              try {
+                await db.collection("stops").doc(key).set(val);
+                console.log("updated stop "+key);
+              } catch (error) {
+                console.log("error updating stop "+key);
+              }
+            })();
+          });
+        });
+      });
+      request.end();
+      return null;
+    });
