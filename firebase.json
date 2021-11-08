@@ -14,10 +14,6 @@
     ],
     "rewrites": [ 
       {
-        "source": "/app",
-        "function": "app"
-      },
-      {
         "source": "/stops/**",
         "function": "stops"
       },

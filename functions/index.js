@@ -16,21 +16,32 @@ const db = admin.firestore();
 
 // read stop
 app.get("/stop/:item_id", (req, res) => {
-  (async function() {
-    try {
-      const document = db.collection("stops").doc(req.params.item_id);
-      const item = await document.get();
-      if (item.exists) {
-        const response = item.data();
-        return res.status(200).send(response);
-      } else {
-        return res.status(404).send(req.params.item_id+" not found");
+  cors()(req, res, () => {
+    (async function() {
+      try {
+        const document = db.collection("stops").doc(req.params.item_id);
+        const item = await document.get();
+        if (item.exists) {
+          const response = item.data();
+          return res.status(200).send(response);
+        } else {
+          return res.status(404).send(req.params.item_id+" not found");
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).send(error);
       }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send(error);
-    }
-  })();
+    })();
+  });
+});
+
+app.options("/stop/:item_id", (req, res) => {
+  // unclear if this actually necessary,
+  // these may qualify as requests that don't need CORS
+  // works over http, but gets 502 error on https
+  cors()(req, res, () => {
+    return res.status(200).send({msg: "This is CORS-enabled for all origins!"});
+  });
 });
 
 // read all
@@ -63,7 +74,34 @@ app.get("/stops/agency/:agency_id", (req, res) => {
   })();
 });
 
+app.get("/stops/byLng", (req, res) => {
+  // ?startkey=-122.66459740163576&endkey=-122.65172279836428
+  // &callback=jsonp1636221434112
+  // return res.status(200).jsonp([req.query.startkey, req.query.endkey]);
+  (async () => {
+    try {
+      const querySnapshot =
+        await db.collection("stops").where(
+            "stop_lon", ">=", req.query.startkey,
+        ).get();
+      const selectedStops = querySnapshot.docs.map((doc) => doc.data());
+      return res.status(200).send(selectedStops);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send(error);
+    }
+  })();
+});
+
 exports.stops = functions.https.onRequest(app);
+
+/*
+exports.addMessage = functions.https.onRequest((req, res) => {
+  cors()(req, res, () => {
+    return res.json({status: 'ok'});
+  });
+});
+*/
 
 exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
     .timeZone("America/Los_Angeles")
