@@ -82,10 +82,12 @@ app.get("/stops/byLng", (req, res) => {
     try {
       const querySnapshot =
         await db.collection("stops").where(
-            "stop_lon", ">=", req.query.startkey,
+            "stop_lon", ">=", parseFloat(req.query.startkey),
+        ).where(
+            "stop_lon", "<=", parseFloat(req.query.endkey),
         ).get();
       const selectedStops = querySnapshot.docs.map((doc) => doc.data());
-      return res.status(200).send(selectedStops);
+      return res.status(200).jsonp(selectedStops);
     } catch (error) {
       console.log(error);
       return res.status(500).send(error);
