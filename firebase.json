@@ -24,6 +24,18 @@
       {
         "source": "/stop/*",
         "function": "stops"
+      },
+      {
+        "source": "/configs/**",
+        "function": "configs"
+      },
+      {
+        "source": "/configs",
+        "function": "configs"
+      },
+      {
+        "source": "/config/*",
+        "function": "configs"
       }  
     ]
   }

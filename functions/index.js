@@ -130,12 +130,79 @@ exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
                 await db.collection("stops").doc(key).set(val);
                 console.log("updated stop "+key);
               } catch (error) {
-                console.log("error updating stop "+key);
+                console.log("error updating stop "+key+": "+error);
               }
             })();
           });
+          setTimeout(function() {
+            // wait a few seconds and do it again to deal
+            // with coldstart timeouts
+            Object.keys(stops.stops).forEach(function(key) {
+              const val = stops.stops[key];
+              (async () => {
+                try {
+                  await db.collection("stops").doc(key).set(val);
+                  console.log("updated stop "+key);
+                } catch (error) {
+                  console.log("error updating stop "+key+": "+error);
+                }
+              })();
+            });
+          }, 2000);
         });
       });
       request.end();
       return null;
     });
+
+// configuration functions
+
+const configs = express();
+configs.use(cors({origin: true}));
+
+configs.get("/configs/copyAll", (req, res) => {
+  (async () => {
+    let data = "";
+    const options = {
+      hostname: "68d011c8-fd22-4ad8-8471-c8b4d1729f90-bluemix.cloudant.com",
+      port: 443,
+      path: "/ta_config_production/_design/ta_config_production/_view/all",
+      method: "GET",
+    };
+    const request = https.request(options, (response) => {
+      response.on("data", (d) => {
+        data += d;
+      });
+      response.on("end", () => {
+        console.log("Response ended");
+        const stops = JSON.parse(data);
+        return res.status(200).send(stops);
+      });
+      response.on("close", () => {
+        console.log("Response closed");
+        const stops = JSON.parse(data);
+        return res.status(200).send(stops);
+        /*
+        Object.keys(stops.stops).forEach(function(key) {
+          const val = stops.stops[key];
+          (async () => {
+            try {
+              await db.collection("stops").doc(key).set(val);
+              console.log("updated stop "+key);
+            } catch (error) {
+              console.log("error updating stop "+key);
+            }
+          })();
+        });
+        */
+      });
+    });
+    request.on("error", (e) => {
+      console.error(e.message);
+    });
+    await request.end();
+  });
+  return null;
+});
+
+exports.configs = functions.https.onRequest(configs);
