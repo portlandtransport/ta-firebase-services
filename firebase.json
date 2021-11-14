@@ -36,6 +36,10 @@
       {
         "source": "/config/*",
         "function": "configs"
+      },
+      {
+        "source": "/configuration/*",
+        "function": "configs"
       }  
     ]
   }

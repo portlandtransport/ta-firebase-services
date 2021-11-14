@@ -160,48 +160,75 @@ exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
 const configs = express();
 configs.use(cors({origin: true}));
 
-configs.get("/configs/copyAll", (req, res) => {
-  (async () => {
-    let data = "";
-    const options = {
-      hostname: "68d011c8-fd22-4ad8-8471-c8b4d1729f90-bluemix.cloudant.com",
-      port: 443,
-      path: "/ta_config_production/_design/ta_config_production/_view/all",
-      method: "GET",
-    };
-    const request = https.request(options, (response) => {
-      response.on("data", (d) => {
-        data += d;
-      });
-      response.on("end", () => {
-        console.log("Response ended");
-        const stops = JSON.parse(data);
-        return res.status(200).send(stops);
-      });
-      response.on("close", () => {
-        console.log("Response closed");
-        const stops = JSON.parse(data);
-        return res.status(200).send(stops);
-        /*
-        Object.keys(stops.stops).forEach(function(key) {
-          const val = stops.stops[key];
-          (async () => {
-            try {
-              await db.collection("stops").doc(key).set(val);
-              console.log("updated stop "+key);
-            } catch (error) {
-              console.log("error updating stop "+key);
+// read config
+configs.get("/configuration/:item_id", (req, res) => {
+  cors()(req, res, () => {
+    (async function() {
+      try {
+        const document = db.collection("configs").doc(req.params.item_id);
+        const item = await document.get();
+        if (item.exists) {
+          const response = item.data();
+          if ({}.hasOwnProperty.call(response, "value")) {
+            const value = response["value"];
+            if ({}.hasOwnProperty.call(value, "external_configuration")) {
+              return res.status(200).send(value.external_configuration);
+            } else {
+              return res.status(404)
+                  .send({"error": "No matching configuration found",
+                    "source": "firestore"});
             }
-          })();
-        });
-        */
-      });
-    });
-    request.on("error", (e) => {
-      console.error(e.message);
-    });
-    await request.end();
+          } else {
+            return res.status(404)
+                .send({"error": "No matching configuration found",
+                  "source": "firestore"});
+          }
+        } else {
+          return res.status(404)
+              .send({"error": "No matching configuration found",
+                "source": "firestore"});
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).send(error);
+      }
+    })();
   });
+});
+
+configs.get("/configs/copyAll", (req, res) => {
+  let data = "";
+  const options = {
+    hostname: "68d011c8-fd22-4ad8-8471-c8b4d1729f90-bluemix.cloudant.com",
+    port: 443,
+    path: "/ta_config_production/_design/ta_config_production/_view/all",
+    method: "GET",
+  };
+  const request = https.request(options, (response) => {
+    response.on("data", (d) => {
+      data += d;
+    });
+    response.on("end", () => {
+      console.log("Response ended");
+      const raw = JSON.parse(data);
+      const configurations = raw.rows;
+      for (const val of configurations) {
+        (async () => {
+          try {
+            await db.collection("configs").doc(val.id).set(val);
+            console.log("updated config "+val.id);
+          } catch (error) {
+            console.log("error updating config "+val.id);
+          }
+        })();
+      }
+      return res.status(200).send("wrote configurations");
+    });
+  });
+  request.on("error", (e) => {
+    console.error(e.message);
+  });
+  request.end();
   return null;
 });
 
