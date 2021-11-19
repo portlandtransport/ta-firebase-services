@@ -128,7 +128,7 @@ exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
             (async () => {
               try {
                 await db.collection("stops").doc(key).set(val);
-                console.log("updated stop "+key);
+                // console.log("updated stop "+key);
               } catch (error) {
                 console.log("error updating stop "+key+": "+error);
               }
@@ -216,7 +216,7 @@ configs.get("/configs/copyAll", (req, res) => {
         (async () => {
           try {
             await db.collection("configs").doc(val.id).set(val);
-            console.log("updated config "+val.id);
+            // console.log("updated config "+val.id);
           } catch (error) {
             console.log("error updating config "+val.id);
           }
