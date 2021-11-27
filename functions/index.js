@@ -14,6 +14,39 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+/**
+ * remap individual URL to https
+ * @param {string} url individual url
+ * @return {string} modified url
+ */
+function remapUrlToHttps(url) {
+  let newUrl = url.replace("http://dev.transiboard.com", "https://dev.transitboard.com");
+  newUrl = newUrl.replace("http://transitboard.com", "https://transitboard.com");
+  return newUrl;
+}
+
+/**
+ * remap URL structure to https
+ * @param {object} configurations url structure
+ * @return {object} modified url structure
+ */
+function remapConfigUrlsToHttps(configurations) {
+  const newConfig = {};
+  newConfig.url = remapUrlToHttps(configurations.url);
+  newConfig.urls = [];
+  configurations.urls.forEach(function(element) {
+    const newElement = {};
+    if (element.app_url) {
+      newElement.app_url = remapUrlToHttps(element.app_url);
+    }
+    if (element.img_url) {
+      newElement.img_url = remapUrlToHttps(element.img_url);
+    }
+    newConfig.urls.push(newElement);
+  });
+  return newConfig;
+}
+
 // read stop
 app.get("/stop/:item_id", (req, res) => {
   cors()(req, res, () => {
@@ -148,7 +181,7 @@ exports.scheduledFunctionCrontab = functions.pubsub.schedule("10 12 * * *")
                 }
               })();
             });
-          }, 2000);
+          }, 5000);
         });
       });
       request.end();
@@ -172,7 +205,8 @@ configs.get("/configuration/:item_id", (req, res) => {
           if ({}.hasOwnProperty.call(response, "value")) {
             const value = response["value"];
             if ({}.hasOwnProperty.call(value, "external_configuration")) {
-              return res.status(200).send(value.external_configuration);
+              return res.status(200).
+                  send(remapConfigUrlsToHttps(value.external_configuration));
             } else {
               return res.status(404)
                   .send({"error": "No matching configuration found",
