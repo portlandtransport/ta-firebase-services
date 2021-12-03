@@ -121,7 +121,7 @@ app.get("/stops/byLng", (req, res) => {
             "stop_lon", "<=", parseFloat(req.query.endkey),
         ).get();
       const selectedStops = querySnapshot.docs.map((doc) => doc.data());
-      return res.status(200).jsonp(selectedStops);
+      return res.status(200).jsonp({"rows": selectedStops});
     } catch (error) {
       console.log(error);
       return res.status(500).send(error);
