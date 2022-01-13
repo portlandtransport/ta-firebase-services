@@ -10,4 +10,4 @@ admin.initializeApp({
 const stops = require("./stops");
 const configs = require("./configs");
 exports.stops = stops.stops;
-exports.configs = configs.configs;
+exports.configsCentral = configs.configs;

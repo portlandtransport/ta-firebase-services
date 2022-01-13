@@ -96,53 +96,58 @@ app.get("/stops/byLng", (req, res) => {
 });
 
 app.get("/stops/saveUpdates", (req, res) => {
-  (async () => {
-    console.log("on demand job to update TriMet entries");
-    let data = "";
-    const options = {
-      hostname: "transitboard.com",
-      port: 443,
-      path: "/firebase_stop_updates.json",
-      method: "GET",
-    };
-    const request = https.request(options, (response) => {
-      response.on("data", (d) => {
-        data += d;
+  console.log("on demand job to update TriMet entries");
+  let data = "";
+  const options = {
+    hostname: "transitboard.com",
+    port: 443,
+    path: "/firebase_stop_updates.json",
+    method: "GET",
+  };
+  const request = https.request(options, (response) => {
+    response.on("data", (d) => {
+      data += d;
+    });
+    response.on("close", async () => {
+      console.log("Response closed");
+      const stops = JSON.parse(data);
+      const batch = db.batch();
+      Object.keys(stops.stops).forEach(function(key) {
+        const val = stops.stops[key];
+        const docRef = db.collection("stops").doc(val.id);
+        batch.set(docRef, val)
+            .then(function() {
+              console.log("first pass updated stop "+key);
+            }).catch(function(error) {
+              console.log("first pass error updating stop "+key+": "+error);
+            });
       });
-      response.on("close", () => {
-        console.log("Response closed");
-        const stops = JSON.parse(data);
+      await batch.commit().then(function(response) {
+        console.log("batch write success");
+      }).catch(function(error) {
+        console.log("batch write error on batch "+error);
+      });
+      /*
+      setTimeout(function() {
+        // wait a few seconds and do it again to deal
+        // with coldstart timeouts
         Object.keys(stops.stops).forEach(function(key) {
           const val = stops.stops[key];
           (async () => {
             try {
               await db.collection("stops").doc(key).set(val);
-              console.log("first pass updated stop "+key);
+              console.log("2nd pass updated stop "+key);
             } catch (error) {
-              console.log("first pass error updating stop "+key+": "+error);
+              console.log("2nd pass error updating stop "+key+": "+error);
             }
           })();
         });
-        setTimeout(function() {
-          // wait a few seconds and do it again to deal
-          // with coldstart timeouts
-          Object.keys(stops.stops).forEach(function(key) {
-            const val = stops.stops[key];
-            (async () => {
-              try {
-                await db.collection("stops").doc(key).set(val);
-                console.log("2nd pass updated stop "+key);
-              } catch (error) {
-                console.log("2nd pass error updating stop "+key+": "+error);
-              }
-            })();
-          });
-        }, 5000);
-      });
+      }, 5000);
+      */
     });
-    request.end();
-    return res.status(200).send("request completed");
-  })();
+  });
+  request.end();
+  return res.status(200).send("request completed");
 });
 
-exports.stops = functions.https.onRequest(app);
+exports.stops = functions.region("us-central1").https.onRequest(app);

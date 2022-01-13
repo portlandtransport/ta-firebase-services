@@ -99,7 +99,7 @@ configs.get("/configs/copyAll", (req, res) => {
     response.on("data", (d) => {
       data += d;
     });
-    response.on("end", () => {
+    response.on("end", async () => {
       console.log("Response ended");
       const raw = JSON.parse(data);
       const configurations = raw.rows;
@@ -109,30 +109,26 @@ configs.get("/configs/copyAll", (req, res) => {
         const docRef = db.collection("configs").doc(val.id);
         batch.set(docRef, val);
         if (batchCount >= 100) {
-          (async () => {
-            batch.commit().then(function(response) {
-              console.log("batch write success on batch "+
-                  batchSeq+", "+batchCount+" items");
-            }).catch(function(error) {
-              console.log("batch write error on batch "+
-                  batchSeq+" "+error);
-            });
-          })();
+          await batch.commit().then(function(response) {
+            console.log("batch write success on batch "+
+                batchSeq+", "+batchCount+" items");
+          }).catch(function(error) {
+            console.log("batch write error on batch "+
+                batchSeq+" "+error);
+          });
           batchCount = 0;
           batchSeq++;
           batch = db.batch();
         }
       }
       if (batchCount > 0) {
-        (async () => {
-          try {
-            await batch.commit();
-            console.log("batch write success on batch "+
-                batchSeq+", "+batchCount+" items");
-          } catch (error) {
-            console.log("batch write error on batch "+batchSeq+" "+error);
-          }
-        })();
+        await batch.commit().then(function(response) {
+          console.log("batch write success on batch "+
+              batchSeq+", "+batchCount+" items");
+        }).catch(function(error) {
+          console.log("batch write error on batch "+
+              batchSeq+" "+error);
+        });
       }
       return res.status(200).send("wrote "+updateCount+" configurations");
     });
@@ -144,4 +140,4 @@ configs.get("/configs/copyAll", (req, res) => {
   return null;
 });
 
-exports.configs = functions.https.onRequest(configs);
+exports.configs = functions.region("us-central1").https.onRequest(configs);

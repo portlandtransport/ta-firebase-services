@@ -27,19 +27,19 @@
       },
       {
         "source": "/configs/**",
-        "function": "configs"
+        "function": "configsCentral"
       },
       {
         "source": "/configs",
-        "function": "configs"
+        "function": "configsCentral"
       },
       {
         "source": "/config/*",
-        "function": "configs"
+        "function": "configsCentral"
       },
       {
         "source": "/configuration/*",
-        "function": "configs"
+        "function": "configsCentral"
       }  
     ]
   }
