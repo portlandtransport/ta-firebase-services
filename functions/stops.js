@@ -114,13 +114,8 @@ app.get("/stops/saveUpdates", (req, res) => {
       const batch = db.batch();
       Object.keys(stops.stops).forEach(function(key) {
         const val = stops.stops[key];
-        const docRef = db.collection("stops").doc(val.id);
-        batch.set(docRef, val)
-            .then(function() {
-              console.log("first pass updated stop "+key);
-            }).catch(function(error) {
-              console.log("first pass error updating stop "+key+": "+error);
-            });
+        const docRef = db.collection("stops").doc(key);
+        batch.set(docRef, val);
       });
       await batch.commit().then(function(response) {
         console.log("batch write success");
