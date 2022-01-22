@@ -111,16 +111,16 @@ app.get("/stops/saveUpdates", (req, res) => {
     response.on("close", async () => {
       console.log("Response closed");
       const stops = JSON.parse(data);
-      const batch = db.batch();
+      const bulkWriter = db.bulkWriter();
       Object.keys(stops.stops).forEach(function(key) {
         const val = stops.stops[key];
         const docRef = db.collection("stops").doc(key);
-        batch.set(docRef, val);
+        bulkWriter.set(docRef, val).catch((err) => {
+          console.log("Write failed with: ", err);
+        });
       });
-      await batch.commit().then(function(response) {
-        console.log("batch write success");
-      }).catch(function(error) {
-        console.log("batch write error on batch "+error);
+      await bulkWriter.close().then(() => {
+        console.log("Executed all writes on close");
       });
     });
   });
