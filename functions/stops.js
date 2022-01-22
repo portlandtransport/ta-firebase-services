@@ -122,23 +122,6 @@ app.get("/stops/saveUpdates", (req, res) => {
       }).catch(function(error) {
         console.log("batch write error on batch "+error);
       });
-      /*
-      setTimeout(function() {
-        // wait a few seconds and do it again to deal
-        // with coldstart timeouts
-        Object.keys(stops.stops).forEach(function(key) {
-          const val = stops.stops[key];
-          (async () => {
-            try {
-              await db.collection("stops").doc(key).set(val);
-              console.log("2nd pass updated stop "+key);
-            } catch (error) {
-              console.log("2nd pass error updating stop "+key+": "+error);
-            }
-          })();
-        });
-      }, 5000);
-      */
     });
   });
   request.end();

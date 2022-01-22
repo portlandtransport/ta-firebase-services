@@ -14,6 +14,14 @@
     ],
     "rewrites": [ 
       {
+        "source": "/applications/**",
+        "function": "applications"
+      },
+      {
+        "source": "/applications",
+        "function": "applications"
+      },
+      {
         "source": "/stops/**",
         "function": "stops"
       },

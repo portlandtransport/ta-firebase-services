@@ -9,5 +9,7 @@ admin.initializeApp({
 
 const stops = require("./stops");
 const configs = require("./configs");
+const applications = require("./applications");
 exports.stops = stops.stops;
 exports.configsCentral = configs.configs;
+exports.applications = applications.applications;
