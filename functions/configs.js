@@ -104,7 +104,7 @@ configs.get("/configs/copyAll", (req, res) => {
       for (const val of configurations) {
         updateCount++;
         if (val.value.author == "chrissm") {
-          val.author = "wngOzzVhHBVTSfxHBbj22QXGFxp2";
+          val.author = "RZlCwxMxF4MpfYPjSvbpaRT7lD63";
         }
         const docRef = db.collection("configs").doc(val.id);
         bulkWriter.set(docRef, val).catch((err) => {
@@ -115,8 +115,7 @@ configs.get("/configs/copyAll", (req, res) => {
         console.log("Executed all writes on close");
       });
 
-      return res.status(200).send("wrote "+updateCount+" configurations "+
-          uuidv1());
+      return res.status(200).send("wrote "+updateCount+" configurations");
     });
   });
   request.on("error", (e) => {
