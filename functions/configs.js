@@ -101,11 +101,17 @@ configs.get("/configs/copyAll", (req, res) => {
       const raw = JSON.parse(data);
       const configurations = raw.rows;
       const bulkWriter = db.bulkWriter();
+      const now = new Date();
+      const utcMilllisecondsSinceEpoch = now.getTime() +
+          (now.getTimezoneOffset() * 60 * 1000);
+      const utcSecondsSinceEpoch =
+          Math.round(utcMilllisecondsSinceEpoch / 1000);
       for (const val of configurations) {
         updateCount++;
         if (val.value.author == "chrissm") {
           val.author = "RZlCwxMxF4MpfYPjSvbpaRT7lD63";
         }
+        val.modified = utcSecondsSinceEpoch;
         const docRef = db.collection("configs").doc(val.id);
         bulkWriter.set(docRef, val).catch((err) => {
           console.log("Write failed with: ", err);
@@ -123,6 +129,39 @@ configs.get("/configs/copyAll", (req, res) => {
   });
   request.end();
   return null;
+});
+
+configs.get("/configs", (req, res) => {
+  (async () => {
+    try {
+      const querySnapshot = await db.collection("configs").get();
+      const selectedConfigs = querySnapshot.docs.map((doc) => doc.data());
+      return res.status(200).send(selectedConfigs);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send(error);
+    }
+  })();
+});
+
+configs.get("/configs/mostRecent", (req, res) => {
+  (async () => {
+    try {
+      // const querySnapshot = await db.collection("configs").get();
+      const querySnapshot =
+      await db.collection("configs").where(
+          "modified", ">", 0,
+      ).get();
+      const selectedTimes = querySnapshot.docs
+          .map((doc) => doc.data().modified);
+      selectedTimes.sort();
+      selectedTimes.reverse();
+      return res.status(200).send({"modified": selectedTimes[0]});
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send(error);
+    }
+  })();
 });
 
 exports.configs = functions.region("us-central1").https.onRequest(configs);
