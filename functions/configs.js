@@ -91,10 +91,7 @@ configs.get("/configs/copyAll", (req, res) => {
     path: "/ta_config_production/_design/ta_config_production/_view/all",
     method: "GET",
   };
-  let batchCount = 0;
   let updateCount = 0;
-  let batchSeq = 0;
-  let batch = db.batch();
   const request = https.request(options, (response) => {
     response.on("data", (d) => {
       data += d;
@@ -103,34 +100,23 @@ configs.get("/configs/copyAll", (req, res) => {
       console.log("Response ended");
       const raw = JSON.parse(data);
       const configurations = raw.rows;
+      const bulkWriter = db.bulkWriter();
       for (const val of configurations) {
         updateCount++;
-        batchCount++;
-        const docRef = db.collection("configs").doc(val.id);
-        batch.set(docRef, val);
-        if (batchCount >= 100) {
-          await batch.commit().then(function(response) {
-            console.log("batch write success on batch "+
-                batchSeq+", "+batchCount+" items");
-          }).catch(function(error) {
-            console.log("batch write error on batch "+
-                batchSeq+" "+error);
-          });
-          batchCount = 0;
-          batchSeq++;
-          batch = db.batch();
+        if (val.value.author == "chrissm") {
+          val.author = "wngOzzVhHBVTSfxHBbj22QXGFxp2";
         }
-      }
-      if (batchCount > 0) {
-        await batch.commit().then(function(response) {
-          console.log("batch write success on batch "+
-              batchSeq+", "+batchCount+" items");
-        }).catch(function(error) {
-          console.log("batch write error on batch "+
-              batchSeq+" "+error);
+        const docRef = db.collection("configs").doc(val.id);
+        bulkWriter.set(docRef, val).catch((err) => {
+          console.log("Write failed with: ", err);
         });
       }
-      return res.status(200).send("wrote "+updateCount+" configurations");
+      await bulkWriter.close().then(() => {
+        console.log("Executed all writes on close");
+      });
+
+      return res.status(200).send("wrote "+updateCount+" configurations "+
+          uuidv1());
     });
   });
   request.on("error", (e) => {
