@@ -136,7 +136,8 @@ configs.get("/configs", (req, res) => {
     try {
       const querySnapshot = await db.collection("configs").get();
       const selectedConfigs = querySnapshot.docs.map((doc) => doc.data());
-      return res.status(200).send(selectedConfigs);
+      return res.status(200)
+          .send({"count": selectedConfigs.length, "rows": selectedConfigs});
     } catch (error) {
       console.log(error);
       return res.status(500).send(error);
@@ -144,24 +145,43 @@ configs.get("/configs", (req, res) => {
   })();
 });
 
-configs.get("/configs/mostRecent", (req, res) => {
-  (async () => {
-    try {
-      // const querySnapshot = await db.collection("configs").get();
-      const querySnapshot =
-      await db.collection("configs").where(
-          "modified", ">", 0,
-      ).get();
-      const selectedTimes = querySnapshot.docs
-          .map((doc) => doc.data().modified);
-      selectedTimes.sort();
-      selectedTimes.reverse();
-      return res.status(200).send({"modified": selectedTimes[0]});
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send(error);
-    }
-  })();
+configs.get("/configs/lastSevenDays", async (req, res) => {
+  const now = new Date();
+  const utcMilllisecondsSinceEpoch = now.getTime() +
+      (now.getTimezoneOffset() * 60 * 1000);
+  const utcSecondsSinceEpoch = Math.round(utcMilllisecondsSinceEpoch / 1000);
+  const cutoff = utcSecondsSinceEpoch - (7*24*60*60);
+  try {
+    // const querySnapshot = await db.collection("configs").get();
+    const querySnapshot =
+    await db.collection("configs").where(
+        "modified", ">", cutoff,
+    ).get();
+    const selectedConfigs = querySnapshot.docs.map((doc) => doc.data());
+    return res.status(200)
+        .send({"count": selectedConfigs.length, "rows": selectedConfigs});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error);
+  }
+});
+
+configs.get("/configs/lastModifiedTime", async (req, res) => {
+  try {
+    // const querySnapshot = await db.collection("configs").get();
+    const querySnapshot =
+    await db.collection("configs").where(
+        "modified", ">", 0,
+    ).get();
+    const selectedTimes = querySnapshot.docs
+        .map((doc) => doc.data().modified);
+    selectedTimes.sort();
+    selectedTimes.reverse();
+    return res.status(200).send({"modified": selectedTimes[0]});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error);
+  }
 });
 
 exports.configs = functions.region("us-central1").https.onRequest(configs);
