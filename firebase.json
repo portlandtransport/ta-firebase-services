@@ -48,7 +48,11 @@
       {
         "source": "/configuration/*",
         "function": "configsCentral"
-      }  
+      },
+      {
+        "source": "/rawconfig/*",
+        "function": "configsCentral"
+      }   
     ]
   }
 }

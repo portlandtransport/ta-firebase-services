@@ -82,6 +82,43 @@ configs.get("/configuration/:item_id", (req, res) => {
   });
 });
 
+// read raw config
+configs.get("/rawconfig/:item_id", (req, res) => {
+  cors()(req, res, () => {
+    (async function() {
+      try {
+        const document = db.collection("configs").doc(req.params.item_id);
+        const item = await document.get();
+        if (item.exists) {
+          const response = item.data();
+          if ({}.hasOwnProperty.call(response, "value")) {
+            const value = response["value"];
+            if ({}.hasOwnProperty.call(value, "external_configuration")) {
+              return res.status(200).
+                  send(value);
+            } else {
+              return res.status(404)
+                  .send({"error": "No matching configuration found",
+                    "source": "firestore"});
+            }
+          } else {
+            return res.status(404)
+                .send({"error": "No matching configuration found",
+                  "source": "firestore"});
+          }
+        } else {
+          return res.status(404)
+              .send({"error": "No matching configuration found",
+                "source": "firestore"});
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).send(error);
+      }
+    })();
+  });
+});
+
 configs.get("/configs/copyAll", (req, res) => {
   console.log("starting replication of configs from CouchDB to Firebase");
   let data = "";
