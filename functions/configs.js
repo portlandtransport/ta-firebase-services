@@ -2,7 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
-const https = require("https");
+// const https = require("https");
 
 const db = admin.firestore();
 
@@ -120,6 +120,8 @@ configs.get("/rawconfig/:item_id", (req, res) => {
 });
 
 configs.get("/configs/copyAll", (req, res) => {
+  return res.status(200).send("this function has been disabled");
+  /*
   console.log("starting replication of configs from CouchDB to Firebase");
   let data = "";
   const options = {
@@ -166,7 +168,9 @@ configs.get("/configs/copyAll", (req, res) => {
   });
   request.end();
   return null;
+  */
 });
+
 
 configs.get("/configs", (req, res) => {
   (async () => {
