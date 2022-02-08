@@ -1,3 +1,3 @@
-# ta-stop-service
-REST Service to retrieve information about an individual transit stop or geoqueried set of stops
+# ta-firebase-services
+REST Services to store and retrieve information about transit stops and configurations of individual screens
 
