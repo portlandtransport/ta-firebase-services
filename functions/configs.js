@@ -12,7 +12,7 @@ const db = admin.firestore();
  * @return {string} modified url
  */
 function remapUrlToHttps(url) {
-  let newUrl = url.replace("http://dev.transiboard.com", "https://dev.transitboard.com");
+  let newUrl = url.replace("http://dev.transiboard.com", "https://dev.transitappliance.com");
   newUrl = newUrl.replace("http://transitboard.com", "https://transitboard.com");
   newUrl = newUrl.replace("http://alt1.transitboard.com/", "https://d3e69nqsg1tckh.cloudfront.net/");
   return newUrl;
