@@ -16,6 +16,7 @@ function remapUrlToHttps(url) {
   newUrl = newUrl.replace("http://transitboard.com", "https://transitappliance.com");
   newUrl = newUrl.replace("http://transitappliance.com", "https://transitappliance.com");
   newUrl = newUrl.replace("http://alt1.transitboard.com/", "https://d3e69nqsg1tckh.cloudfront.net/");
+  newUrl = newUrl.replace("http://alt1.transitboard.com.s3-website-us-east-1.amazonaws.com/", "https://d3e69nqsg1tckh.cloudfront.net/");
   return newUrl;
 }
 
