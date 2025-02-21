@@ -99,7 +99,7 @@ app.get("/stops/saveUpdates", (req, res) => {
   console.log("on demand job to update TriMet entries");
   let data = "";
   const options = {
-    hostname: "transitboard.com",
+    hostname: "transitappliance.com",
     port: 443,
     path: "/firebase_stop_updates.json",
     method: "GET",
