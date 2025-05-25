@@ -30,14 +30,16 @@ function remapConfigUrlsToHttps(configurations) {
   newConfig.url = remapUrlToHttps(configurations.url);
   newConfig.urls = [];
   configurations.urls.forEach(function(element) {
-    const newElement = {};
-    if (element.app_url) {
-      newElement.app_url = remapUrlToHttps(element.app_url);
+    for (let i = 0; i < 2; i++) {
+      const newElement = {};
+      if (element.app_url) {
+        newElement.app_url = remapUrlToHttps(element.app_url);
+      }
+      if (element.img_url) {
+        newElement.img_url = remapUrlToHttps(element.img_url);
+      }
+      newConfig.urls.push(newElement);
     }
-    if (element.img_url) {
-      newElement.img_url = remapUrlToHttps(element.img_url);
-    }
-    newConfig.urls.push(newElement);
   });
   return newConfig;
 }
