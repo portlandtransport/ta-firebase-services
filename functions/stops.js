@@ -98,34 +98,44 @@ app.get("/stops/byLng", (req, res) => {
 app.get("/stops/saveUpdates", (req, res) => {
   console.log("on demand job to update TriMet entries");
   let data = "";
+  let responseCode = 0;
   const options = {
     hostname: "transitappliance.com",
     port: 443,
     path: "/firebase_stop_updates.json",
     method: "GET",
+    headers: {
+      "User-Agent": "ta-firebase-request",
+    },
   };
   const request = https.request(options, (response) => {
     response.on("data", (d) => {
       data += d;
     });
     response.on("close", async () => {
-      console.log("Response closed");
-      const stops = JSON.parse(data);
-      const bulkWriter = db.bulkWriter();
-      Object.keys(stops.stops).forEach(function(key) {
-        const val = stops.stops[key];
-        const docRef = db.collection("stops").doc(key);
-        bulkWriter.set(docRef, val).catch((err) => {
-          console.log("Write failed with: ", err);
+      console.log("Response code: "+response.statusCode);
+      responseCode = response.statusCode;
+      if (response.statusCode == 200) {
+        console.log("processing json");
+        const stops = JSON.parse(data);
+        const bulkWriter = db.bulkWriter();
+        Object.keys(stops.stops).forEach(function(key) {
+          const val = stops.stops[key];
+          const docRef = db.collection("stops").doc(key);
+          bulkWriter.set(docRef, val).catch((err) => {
+            console.log("Write failed with: ", err);
+          });
         });
-      });
-      await bulkWriter.close().then(() => {
-        console.log("Executed all writes on close");
-      });
+        await bulkWriter.close().then(() => {
+          console.log("Executed all writes on close");
+        });
+      } else {
+        console.log("error response, skipping json");
+      }
     });
   });
   request.end();
-  return res.status(200).send("request completed");
+  return res.status(200).send("request completed with status: "+responseCode);
 });
 
 exports.stops = functions.region("us-central1").https.onRequest(app);
