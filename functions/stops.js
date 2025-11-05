@@ -110,7 +110,7 @@ app.get("/stops/saveUpdates", (req, res) => {
     });
     response.on("close", async () => {
       console.log("Response closed");
-      console.log(data);
+      //console.log(data);
       const stops = JSON.parse(data);
       const bulkWriter = db.bulkWriter();
       Object.keys(stops.stops).forEach(function(key) {
